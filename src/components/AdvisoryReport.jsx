@@ -8,10 +8,14 @@ function AdvisoryReport({ report, loanRecommendations, onBack, language = 'en' }
     nutrient_status: false,
     fertilizer_recommendation: false,
     crop_recommendation: false,
+    cost_breakdown: true,
+    profit_estimation: true,
+    risk_analysis: true,
+    weather_impact: true,
     irrigation_advice: false,
     risk_assessment: false,
     climate_smart_practices: false,
-    loan_schemes: false
+    loan_schemes: true
   });
 
   const toggleSection = (section) => {
@@ -184,6 +188,154 @@ function AdvisoryReport({ report, loanRecommendations, onBack, language = 'en' }
         )}
       </div>
 
+      {/* ══ Cost Breakdown ══ */}
+      {sections.cost_breakdown && (
+        <div className="report-section collapsible highlight-gold">
+          <div className="section-header" onClick={() => toggleSection('cost_breakdown')}>
+            <div className="section-icon">💰</div>
+            <h2>Cost Per Acre — {sections.cost_breakdown.crop}</h2>
+            <span className="toggle-icon">{expandedSections.cost_breakdown ? '▼' : '▶'}</span>
+          </div>
+          {expandedSections.cost_breakdown && (
+            <div className="section-content">
+              <p className="section-note">{sections.cost_breakdown.note}</p>
+              <div className="cost-table">
+                {sections.cost_breakdown.items.map((item, idx) => (
+                  <div key={idx} className="cost-row">
+                    <span className="cost-icon">{item.icon}</span>
+                    <span className="cost-label">{item.label}</span>
+                    <span className="cost-value">₹{item.value.toLocaleString('en-IN')}</span>
+                    <div className="cost-bar-wrap">
+                      <div
+                        className="cost-bar"
+                        style={{ width: `${Math.min(100, (item.value / sections.cost_breakdown.total) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+                <div className="cost-total-row">
+                  <span>📊 Total Cost per Acre</span>
+                  <span className="cost-total-val">₹{sections.cost_breakdown.total.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══ Profit Estimation ══ */}
+      {sections.profit_estimation && (
+        <div className="report-section collapsible">
+          <div className="section-header" onClick={() => toggleSection('profit_estimation')}>
+            <div className="section-icon">📈</div>
+            <h2>Yield &amp; Profit Estimation</h2>
+            <span className="toggle-icon">{expandedSections.profit_estimation ? '▼' : '▶'}</span>
+          </div>
+          {expandedSections.profit_estimation && (
+            <div className="section-content">
+              <div className="profit-stats-grid">
+                <div className="profit-stat">
+                  <span className="ps-label">Expected Yield</span>
+                  <span className="ps-value primary">{sections.profit_estimation.yield_label}</span>
+                </div>
+                <div className="profit-stat">
+                  <span className="ps-label">Market Price</span>
+                  <span className="ps-value">{sections.profit_estimation.market_price_label}</span>
+                </div>
+                <div className="profit-stat">
+                  <span className="ps-label">Gross Revenue</span>
+                  <span className="ps-value green">₹{sections.profit_estimation.gross_revenue.toLocaleString('en-IN')}</span>
+                </div>
+                <div className="profit-stat">
+                  <span className="ps-label">Total Cost</span>
+                  <span className="ps-value red">₹{sections.profit_estimation.total_cost.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+              <div className="profit-card">
+                <div className="profit-emoji">{sections.profit_estimation.expected_profit >= 0 ? '🤑' : '📉'}</div>
+                <div className="profit-detail">
+                  <span className="profit-amount" style={{ color: sections.profit_estimation.expected_profit >= 0 ? '#34d399' : '#f87171' }}>
+                    {sections.profit_estimation.expected_profit >= 0 ? '+' : ''}
+                    ₹{sections.profit_estimation.expected_profit.toLocaleString('en-IN')}
+                  </span>
+                  <span className="profit-subtext">Expected Profit per Acre</span>
+                </div>
+                <div className="return-ratio-badge">×{sections.profit_estimation.return_ratio}</div>
+              </div>
+              <p className="ratio-statement">{sections.profit_estimation.profit_label}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══ Risk Analysis ══ */}
+      {sections.risk_analysis && (
+        <div className="report-section collapsible">
+          <div className="section-header" onClick={() => toggleSection('risk_analysis')}>
+            <div className="section-icon">⚖️</div>
+            <h2>Risk vs Reward</h2>
+            <span className="toggle-icon">{expandedSections.risk_analysis ? '▼' : '▶'}</span>
+          </div>
+          {expandedSections.risk_analysis && (
+            <div className="section-content">
+              <div className="risk-level-banner risk-" data-level={sections.risk_analysis.risk_level}>
+                <span className="risk-level-icon">
+                  {sections.risk_analysis.risk_level === 'Low' ? '🟢' :
+                   sections.risk_analysis.risk_level === 'Medium' ? '🟡' : '🔴'}
+                </span>
+                <span className="risk-level-text">Risk Level: <strong>{sections.risk_analysis.risk_level}</strong></span>
+                <span className={`risk-badge risk-badge-${sections.risk_analysis.risk_level.toLowerCase()}`}>{sections.risk_analysis.risk_level}</span>
+              </div>
+              <ul className="risk-reasons-list">
+                {sections.risk_analysis.risk_reasons.map((reason, idx) => (
+                  <li key={idx}>{reason}</li>
+                ))}
+              </ul>
+              <div className="ratio-box">
+                <p className="ratio-statement big">{sections.risk_analysis.ratio_statement}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══ Weather Impact ══ */}
+      {sections.weather_impact && (
+        <div className="report-section collapsible">
+          <div className="section-header" onClick={() => toggleSection('weather_impact')}>
+            <div className="section-icon">🌦️</div>
+            <h2>Weather Impact — {sections.weather_impact.crop}</h2>
+            <span className="toggle-icon">{expandedSections.weather_impact ? '▼' : '▶'}</span>
+          </div>
+          {expandedSections.weather_impact && (
+            <div className="section-content">
+              <div className="weather-impact-list">
+                <div className="wi-row">
+                  <span className="wi-icon">🗓️</span>
+                  <p>{sections.weather_impact.season_effect}</p>
+                </div>
+                <div className="wi-row">
+                  <span className="wi-icon">🌧️</span>
+                  <p>{sections.weather_impact.rainfall_effect}</p>
+                </div>
+                <div className="wi-row">
+                  <span className="wi-icon">🌡️</span>
+                  <p>{sections.weather_impact.temperature_effect}</p>
+                </div>
+              </div>
+              {sections.weather_impact.warnings?.length > 0 && (
+                <div className="weather-warnings">
+                  {sections.weather_impact.warnings.map((w, idx) => (
+                    <div key={idx} className="weather-warning-item">{w}</div>
+                  ))}
+                </div>
+              )}
+              <p className="wi-summary">{sections.weather_impact.overall_summary}</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Irrigation Advice */}
       <div className="report-section collapsible">
         <div className="section-header" onClick={() => toggleSection('irrigation_advice')}>
@@ -307,12 +459,32 @@ function AdvisoryReport({ report, loanRecommendations, onBack, language = 'en' }
           {expandedSections.loan_schemes && (
             <div className="section-content">
               <p className="explanation">{loanRecommendations.summary}</p>
+
+              {/* Recommended Loan Option banner */}
+              {loanRecommendations.recommended_loan_option && (
+                <div className="recommended-loan-banner">
+                  <span className="rl-star">⭐</span>
+                  <div className="rl-content">
+                    <span className="rl-label">Recommended Loan Option</span>
+                    <p className="rl-text">{loanRecommendations.recommended_loan_option}</p>
+                  </div>
+                </div>
+              )}
+
               <div className="loan-cards">
                 {loanRecommendations.recommended_schemes.map((scheme, idx) => (
-                  <div key={idx} className="loan-card">
+                  <div key={idx} className={`loan-card ${scheme.best_match ? 'loan-best-match' : ''}`}>
                     <div className="loan-header">
-                      <h4>{scheme.name}</h4>
-                      <span className={`loan-type-badge loan-${scheme.type}`}>{scheme.type}</span>
+                      <h4>
+                        {scheme.best_match && <span className="best-match-star">⭐ </span>}
+                        {scheme.name}
+                      </h4>
+                      <div className="loan-badges">
+                        <span className={`loan-type-badge loan-${scheme.type}`}>{scheme.type}</span>
+                        {scheme.repayment_ease && (
+                          <span className={`ease-badge ease-${scheme.repayment_ease.toLowerCase()}`}>{scheme.repayment_ease}</span>
+                        )}
+                      </div>
                     </div>
                     <p className="loan-provider">🏛 {scheme.provider}</p>
                     <div className="loan-details-grid">

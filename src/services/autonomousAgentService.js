@@ -338,6 +338,38 @@ class AutonomousAgentService {
           sections.push(`Recommended climate-smart farming practices: ${allPractices}`);
         }
       }
+
+      // Cost Breakdown - simple farmer language
+      if (report.cost_breakdown) {
+        const cb = report.cost_breakdown;
+        const total = cb.total ? `rupees ${cb.total.toLocaleString('en-IN')}` : '';
+        sections.push(`For growing ${cb.crop} on one acre, your estimated total cost is ${total}. This includes seed cost, fertilizer, pesticide, and labour.`);
+      }
+
+      // Profit Estimation - simple language
+      if (report.profit_estimation) {
+        const pe = report.profit_estimation;
+        const profit = pe.expected_profit >= 0
+          ? `You may earn a profit of rupees ${pe.expected_profit.toLocaleString('en-IN')} per acre.`
+          : `This crop may not be profitable this season. Please consider other crops.`;
+        sections.push(`Expected yield is ${pe.yield_label}. Market price is ${pe.market_price_label}. ${profit}`);
+        if (pe.profit_label) sections.push(pe.profit_label);
+      }
+
+      // Risk Level - simple language
+      if (report.risk_analysis) {
+        const ra = report.risk_analysis;
+        sections.push(`The risk level for growing ${ra.crop} is ${ra.risk_level}. ${ra.risk_reasons?.join('. ')}.`);
+      }
+
+      // Weather Impact - simple language
+      if (report.weather_impact) {
+        const wi = report.weather_impact;
+        sections.push(`Weather impact: ${wi.season_effect} ${wi.rainfall_effect}`);
+        if (wi.warnings?.length > 0) {
+          sections.push(`Important weather warning: ${wi.warnings.join(' ')}`);
+        }
+      }
     }
     
     // 13. Location Information

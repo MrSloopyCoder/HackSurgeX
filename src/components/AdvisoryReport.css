@@ -567,3 +567,375 @@
 }
 
 .loan-disclaimer { font-size: 0.72rem; color: var(--text-tertiary, #888); margin-top: 14px; font-style: italic; }
+
+/* ─────────────────────────────────────────────────────────────────
+   HIGHLIGHT-GOLD variant (Cost Breakdown header)
+───────────────────────────────────────────────────────────────── */
+.report-section.highlight-gold {
+  background: linear-gradient(145deg, rgba(251, 191, 36, 0.08) 0%, rgba(20, 20, 25, 0.7) 100%);
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  box-shadow: 0 4px 20px rgba(251, 191, 36, 0.07);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   COST BREAKDOWN TABLE
+───────────────────────────────────────────────────────────────── */
+.section-note {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  margin-bottom: 14px;
+  font-style: italic;
+}
+
+.cost-table {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cost-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto 120px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
+}
+
+.cost-icon { font-size: 1.1rem; }
+
+.cost-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.cost-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.cost-bar-wrap {
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.cost-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+.cost-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding: 12px 14px;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 10px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.cost-total-val {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #fbbf24;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   PROFIT ESTIMATION
+───────────────────────────────────────────────────────────────── */
+.profit-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.profit-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+}
+
+.ps-label {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ps-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.ps-value.primary { color: var(--primary, #10b981); }
+.ps-value.green   { color: #34d399; }
+.ps-value.red     { color: #f87171; }
+
+.profit-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  background: rgba(16, 185, 129, 0.07);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 14px;
+  margin-bottom: 14px;
+}
+
+.profit-emoji { font-size: 2.2rem; }
+
+.profit-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.profit-amount {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.profit-subtext {
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+}
+
+.return-ratio-badge {
+  padding: 8px 14px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 20px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #34d399;
+  white-space: nowrap;
+}
+
+.ratio-statement {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   RISK ANALYSIS
+───────────────────────────────────────────────────────────────── */
+.risk-level-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  border: 1px solid transparent;
+}
+
+.risk-level-banner[data-level="Low"] {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+.risk-level-banner[data-level="Medium"] {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+.risk-level-banner[data-level="High"] {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.risk-level-icon { font-size: 1.5rem; }
+
+.risk-level-text {
+  flex: 1;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.risk-badge {
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.risk-badge-low    { background: rgba(16,185,129,0.18); color: #34d399; }
+.risk-badge-medium { background: rgba(245,158,11,0.18); color: #fbbf24; }
+.risk-badge-high   { background: rgba(239,68,68,0.18);  color: #f87171; }
+
+.risk-reasons-list {
+  padding-left: 20px;
+  color: var(--text-secondary);
+  margin: 0 0 14px 0;
+}
+
+.risk-reasons-list li { padding: 4px 0; font-size: 0.92rem; line-height: 1.5; }
+
+.ratio-box {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+
+.ratio-statement.big {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   WEATHER IMPACT
+───────────────────────────────────────────────────────────────── */
+.weather-impact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.wi-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
+}
+
+.wi-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+
+.wi-row p {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.weather-warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.weather-warning-item {
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-left: 3px solid #ef4444;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  color: #fca5a5;
+  line-height: 1.4;
+}
+
+.wi-summary {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   LOAN SECTION ENHANCEMENTS
+───────────────────────────────────────────────────────────────── */
+
+/* Recommended Loan Option Banner */
+.recommended-loan-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(20,20,25,0.7) 100%);
+  border: 1px solid rgba(251,191,36,0.35);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 0 16px rgba(251,191,36,0.08);
+}
+
+.rl-star { font-size: 1.5rem; flex-shrink: 0; }
+
+.rl-content { display: flex; flex-direction: column; gap: 4px; }
+
+.rl-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #fbbf24;
+}
+
+.rl-text {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Best-match loan card glow */
+.loan-card.loan-best-match {
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  box-shadow: 0 0 18px rgba(251, 191, 36, 0.12);
+  background: linear-gradient(145deg, rgba(251,191,36,0.06) 0%, rgba(20,20,25,0.8) 100%);
+}
+
+.best-match-star { color: #fbbf24; }
+
+.loan-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+/* Repayment ease badges */
+.ease-badge {
+  font-size: 0.62rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.ease-easy     { background: rgba(16,185,129,0.18); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.ease-moderate { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.ease-risky    { background: rgba(239,68,68,0.18);  color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .cost-row { grid-template-columns: 24px 1fr auto; }
+  .cost-bar-wrap { display: none; }
+  .profit-stats-grid { grid-template-columns: 1fr; }
+}
+

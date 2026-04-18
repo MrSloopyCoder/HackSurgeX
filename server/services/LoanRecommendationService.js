@@ -51,8 +51,28 @@ class LoanRecommendationService {
     })
     .filter(Boolean)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 6) // Top 6 for detailed view
-    .map(({ scheme }) => ({
+    .slice(0, 6); // Top 6 for detailed view
+
+    // Total cost per acre from financial analysis (embedded by AgriculturalAdvisorService)
+    const totalCostPerAcre = analysis.advisory_report?.sections?.cost_breakdown?.total
+      || analysis.total_cost_per_acre
+      || 12000; // conservative default
+
+    // Find the best-matching scheme (lowest cost that still covers farmer's need)
+    let bestMatchIdx = 0;
+    let bestMatchScore = -Infinity;
+    scored.forEach(({ scheme, score }, idx) => {
+      const amount = this.parseAmount(scheme.max_loan_amount);
+      // Prefer schemes that cover total cost but aren't excessively large
+      const coverageBonus = amount >= totalCostPerAcre ? 10 : -5;
+      const schemeScore = score + coverageBonus;
+      if (schemeScore > bestMatchScore) {
+        bestMatchScore = schemeScore;
+        bestMatchIdx = idx;
+      }
+    });
+
+    const mapped = scored.map(({ scheme }, idx) => ({
       name: scheme.scheme_name,
       type: scheme.scheme_type,
       provider: scheme.provider,
@@ -68,19 +88,71 @@ class LoanRecommendationService {
       special_features: scheme.special_features || [],
       repayment: scheme.repayment_tenure,
       tags: scheme.tags,
+      // Repayment ease classification
+      repayment_ease: this.classifyRepaymentEase(scheme),
+      // Best match flag
+      best_match: idx === bestMatchIdx,
       // Full TTS-ready description
       tts_description: this.buildTTSDescription(scheme)
     }));
 
-    const summary = `${scored.length} loan and subsidy schemes are available for your farm. ` +
-      scored.map(s => s.name).join(', ') + '.';
+    const bestScheme = mapped[bestMatchIdx];
+    const recommended_loan_option = bestScheme
+      ? `${bestScheme.name} — covers your estimated cost of ₹${totalCostPerAcre.toLocaleString('en-IN')}. Repayment: ${bestScheme.repayment}. Ease: ${bestScheme.repayment_ease}.`
+      : 'Contact your nearest bank for a suitable Kisan Credit Card loan.';
+
+    const summary = `${mapped.length} loan and subsidy schemes are available for your farm. ` +
+      mapped.map(s => s.name).join(', ') + '.';
 
     return {
-      recommended_schemes: scored,
+      recommended_schemes: mapped,
       summary,
+      recommended_loan_option,
+      total_cost_covered: totalCostPerAcre,
       disclaimer: 'Eligibility is subject to bank and government verification. Visit official portals for the latest terms and conditions.',
-      tts_full: this.buildFullTTS(scored)
+      tts_full: this.buildFullTTS(mapped)
     };
+  }
+
+  /**
+   * Classify repayment ease based on interest rate and subsidy
+   */
+  classifyRepaymentEase(scheme) {
+    const rate   = (scheme.interest_rate || '').toLowerCase();
+    const subsidy = (scheme.subsidy_details || '').toLowerCase();
+
+    // 0% or heavy subsidy → Easy
+    if (rate.includes('0%') || rate.includes('interest free') || subsidy.includes('0%')) {
+      return 'Easy';
+    }
+    // Very low effective rate (≤4%) → Easy
+    if (rate.includes('effective') && (rate.includes('4%') || rate.includes('3%') || rate.includes('2%') || rate.includes('1%'))) {
+      return 'Easy';
+    }
+    // ~3–4% → Easy/Moderate
+    if (rate.match(/[1-4](\.\d+)?%/) || rate.includes('subsidised') || rate.includes('subvention')) {
+      return 'Moderate';
+    }
+    // Anything >7% → Risky
+    if (rate.match(/[7-9]\d*(\.\d+)?%/) || rate.match(/1[0-9](\.\d+)?%/)) {
+      return 'Risky';
+    }
+    return 'Moderate';
+  }
+
+  /**
+   * Parse a loan amount string like "Up to Rs 3 lakh" → number in rupees
+   */
+  parseAmount(amountStr) {
+    if (!amountStr) return 0;
+    const str = amountStr.toLowerCase();
+    const match = str.match(/([\d.]+)\s*(lakh|crore|thousand)?/);
+    if (!match) return 0;
+    let val = parseFloat(match[1]);
+    if (str.includes('crore'))   val *= 10_000_000;
+    else if (str.includes('lakh')) val *= 100_000;
+    else if (str.includes('thousand')) val *= 1_000;
+    return val;
   }
 
   buildTTSDescription(scheme) {

@@ -112,6 +112,13 @@ export class AgriculturalAdvisorService {
     // 10. Climate resilient practices
     const climateSmartPractices = this.selectClimateSmartPractices(faoData, location, soilPrediction);
 
+    // 11. Financial analysis (cost, yield, profit, risk vs reward)
+    const topCropName = cropRecommendations.top_crops[0]?.name || 'Rice';
+    const financialAnalysis = this.generateFinancialAnalysis(soilPrediction, weather, topCropName, riskAssessment);
+
+    // 12. Weather impact insight for the primary crop
+    const weatherImpact = this.generateWeatherImpact(weather, topCropName);
+
     return {
       location,
       soilValidation,
@@ -123,7 +130,9 @@ export class AgriculturalAdvisorService {
       cropRecommendations,
       riskAssessment,
       irrigationAdvice,
-      climateSmartPractices
+      climateSmartPractices,
+      financialAnalysis,
+      weatherImpact
     };
   }
 
@@ -595,6 +604,9 @@ export class AgriculturalAdvisorService {
    * Structure the final report
    */
   structureReport(analysis, language) {
+    const fa = analysis.financialAnalysis;
+    const wi = analysis.weatherImpact;
+
     const report = {
       language: language,
       sections: {
@@ -640,6 +652,58 @@ export class AgriculturalAdvisorService {
           top_crops: analysis.cropRecommendations.top_crops,
           explanation: `Based on your ${analysis.soilValidation.soil_type} and current weather conditions, the following crops are most suitable for your farm.`
         },
+
+        // ── NEW: Cost Breakdown ──
+        cost_breakdown: {
+          title: 'Cost Per Acre',
+          crop: fa.crop,
+          items: [
+            { label: 'Seed Cost',        value: fa.seed_cost,        icon: '🌱' },
+            { label: 'Fertilizer Cost',  value: fa.fertilizer_cost,  icon: '💊' },
+            { label: 'Pesticide Cost',   value: fa.pesticide_cost,   icon: '🧴' },
+            { label: 'Labour Cost',      value: fa.labour_cost,      icon: '👷' }
+          ],
+          total: fa.total_cost,
+          note: `Estimated cost to grow ${fa.crop} on 1 acre of your soil type.`
+        },
+
+        // ── NEW: Profit Estimation ──
+        profit_estimation: {
+          title: 'Yield & Profit Estimation',
+          crop: fa.crop,
+          expected_yield_qtl: fa.expected_yield_qtl,
+          yield_label: `${fa.expected_yield_qtl} quintals per acre`,
+          market_price_per_qtl: fa.market_price_per_qtl,
+          market_price_label: `₹${fa.market_price_per_qtl.toLocaleString('en-IN')} per quintal (current avg)`,
+          gross_revenue: fa.gross_revenue,
+          total_cost: fa.total_cost,
+          expected_profit: fa.expected_profit,
+          profit_label: fa.expected_profit >= 0
+            ? `You spend ₹${fa.total_cost.toLocaleString('en-IN')} and may earn ₹${fa.gross_revenue.toLocaleString('en-IN')} → Profit of ₹${fa.expected_profit.toLocaleString('en-IN')}`
+            : `This crop may not be profitable this season. Consider alternatives.`,
+          return_ratio: fa.return_ratio
+        },
+
+        // ── NEW: Risk Analysis ──
+        risk_analysis: {
+          title: 'Risk vs Reward',
+          crop: fa.crop,
+          risk_level: fa.risk_level,
+          risk_reasons: fa.risk_reasons,
+          ratio_statement: fa.ratio_statement,
+          verdict: fa.verdict
+        },
+
+        // ── NEW: Weather Impact ──
+        weather_impact: {
+          title: 'Weather Impact on Your Crop',
+          crop: wi.crop,
+          season_effect: wi.season_effect,
+          rainfall_effect: wi.rainfall_effect,
+          temperature_effect: wi.temperature_effect,
+          warnings: wi.warnings,
+          overall_summary: wi.overall_summary
+        },
         
         irrigation_advice: {
           title: 'Irrigation Advice',
@@ -678,6 +742,202 @@ export class AgriculturalAdvisorService {
 
     return report;
   }
+
+  // ─────────────────────────────────────────────────────────────────
+  //  FINANCIAL ANALYSIS
+  // ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Per-crop default financials (₹ per acre, quintals per acre)
+   * These are realistic Indian average estimates.
+   */
+  getCropFinancialDefaults(cropName) {
+    const name = (cropName || 'rice').toLowerCase();
+    const defaults = {
+      rice:      { seed: 2000, fertilizer: 3500, pesticide: 1500, labour: 5000, yield_qtl: 25, price_per_qtl: 1900 },
+      paddy:     { seed: 2000, fertilizer: 3500, pesticide: 1500, labour: 5000, yield_qtl: 25, price_per_qtl: 1900 },
+      wheat:     { seed: 1800, fertilizer: 3000, pesticide: 1200, labour: 4500, yield_qtl: 22, price_per_qtl: 1800 },
+      groundnut: { seed: 3000, fertilizer: 2500, pesticide: 2000, labour: 5500, yield_qtl: 15, price_per_qtl: 4500 },
+      cotton:    { seed: 2500, fertilizer: 4000, pesticide: 3000, labour: 6000, yield_qtl: 12, price_per_qtl: 5000 },
+      millets:   { seed: 1200, fertilizer: 2000, pesticide: 1000, labour: 4000, yield_qtl: 18, price_per_qtl: 2100 },
+      jowar:     { seed: 1200, fertilizer: 2000, pesticide: 1000, labour: 4000, yield_qtl: 18, price_per_qtl: 2200 },
+      bajra:     { seed: 1000, fertilizer: 1800, pesticide:  800, labour: 3800, yield_qtl: 20, price_per_qtl: 2100 },
+      maize:     { seed: 1500, fertilizer: 2800, pesticide: 1200, labour: 4200, yield_qtl: 22, price_per_qtl: 1600 },
+      sorghum:   { seed: 1200, fertilizer: 2000, pesticide: 1000, labour: 4000, yield_qtl: 18, price_per_qtl: 2200 },
+      sugarcane: { seed: 5000, fertilizer: 5000, pesticide: 2500, labour: 8000, yield_qtl: 350, price_per_qtl: 290 },
+      pulses:    { seed: 2500, fertilizer: 1500, pesticide: 1200, labour: 4000, yield_qtl: 8,  price_per_qtl: 5500 },
+      chickpea:  { seed: 2500, fertilizer: 1500, pesticide: 1200, labour: 4000, yield_qtl: 8,  price_per_qtl: 4000 },
+      soybean:   { seed: 2000, fertilizer: 2500, pesticide: 1500, labour: 4500, yield_qtl: 12, price_per_qtl: 3500 },
+      cashew:    { seed: 1500, fertilizer: 3000, pesticide: 2000, labour: 6000, yield_qtl: 8,  price_per_qtl: 12000 },
+      coconut:   { seed: 2000, fertilizer: 3500, pesticide: 1500, labour: 5000, yield_qtl: 10, price_per_qtl: 8000 },
+      tea:       { seed: 3000, fertilizer: 4500, pesticide: 2500, labour: 9000, yield_qtl: 12, price_per_qtl: 6000 },
+      coffee:    { seed: 3000, fertilizer: 4000, pesticide: 2000, labour: 8000, yield_qtl: 8,  price_per_qtl: 9000 },
+      vegetables:{ seed: 2000, fertilizer: 3000, pesticide: 2000, labour: 6000, yield_qtl: 40, price_per_qtl: 800  }
+    };
+
+    // Try exact match, then partial match, then default to rice
+    if (defaults[name]) return defaults[name];
+    for (const key of Object.keys(defaults)) {
+      if (name.includes(key) || key.includes(name)) return defaults[key];
+    }
+    return defaults['rice'];
+  }
+
+  /**
+   * Compute cost, yield, profit and risk level for the primary crop.
+   */
+  generateFinancialAnalysis(soilPrediction, weather, cropName, riskAssessment) {
+    const d = this.getCropFinancialDefaults(cropName);
+
+    // Soil suitability adjustment (±10% yield)
+    const soilType = soilPrediction.soil_type.toLowerCase();
+    let yieldModifier = 1.0;
+    if (soilType.includes('alluvial')) yieldModifier = 1.1;
+    else if (soilType.includes('black')) yieldModifier = 1.05;
+    else if (soilType.includes('laterite')) yieldModifier = 0.90;
+    else if (soilType.includes('sandy')) yieldModifier = 0.92;
+
+    const seed_cost       = d.seed;
+    const fertilizer_cost = d.fertilizer;
+    const pesticide_cost  = d.pesticide;
+    const labour_cost     = d.labour;
+    const total_cost      = seed_cost + fertilizer_cost + pesticide_cost + labour_cost;
+
+    const expected_yield_qtl   = Math.round(d.yield_qtl * yieldModifier);
+    const market_price_per_qtl = d.price_per_qtl;
+    const gross_revenue        = expected_yield_qtl * market_price_per_qtl;
+    const expected_profit      = gross_revenue - total_cost;
+    const return_ratio         = total_cost > 0 ? (gross_revenue / total_cost).toFixed(2) : '1.00';
+
+    // Risk level: based on existing risk assessment + rainfall + profit margin
+    const highRisks = riskAssessment.risks.filter(r => r.severity === 'High').length;
+    const rainfall  = weather.rainfall_last_30_days || 0;
+    const profitMargin = gross_revenue > 0 ? expected_profit / gross_revenue : 0;
+
+    let risk_level = 'Low';
+    const risk_reasons = [];
+
+    if (highRisks > 0) {
+      risk_level = 'High';
+      risk_reasons.push('High-severity farming risks detected (drought/pH/waterlogging)');
+    } else if (riskAssessment.risks.length > 1) {
+      risk_level = 'Medium';
+      risk_reasons.push('Multiple farm risks identified');
+    }
+
+    if (rainfall < 30) {
+      if (risk_level !== 'High') risk_level = 'Medium';
+      risk_reasons.push('Low rainfall — irrigation dependency is high');
+    } else if (rainfall > 180) {
+      if (risk_level !== 'High') risk_level = 'Medium';
+      risk_reasons.push('Excess rainfall — waterlogging risk is present');
+    }
+
+    if (profitMargin < 0.2) {
+      if (risk_level === 'Low') risk_level = 'Medium';
+      risk_reasons.push('Thin profit margin — market price fluctuation could affect returns');
+    }
+
+    if (risk_reasons.length === 0) {
+      risk_reasons.push('Soil suitable for crop', 'Adequate rainfall expected', 'Good profit margin');
+    }
+
+    const profitFmt   = `₹${expected_profit.toLocaleString('en-IN')}`;
+    const costFmt     = `₹${total_cost.toLocaleString('en-IN')}`;
+    const revenueFmt  = `₹${gross_revenue.toLocaleString('en-IN')}`;
+
+    let verdict = 'Good return';
+    if      (parseFloat(return_ratio) >= 2.5) verdict = 'Excellent return 🌟';
+    else if (parseFloat(return_ratio) >= 1.8) verdict = 'Good return ✅';
+    else if (parseFloat(return_ratio) >= 1.2) verdict = 'Moderate return ⚠️';
+    else                                       verdict = 'Low return — consider alternatives ❌';
+
+    const ratio_statement = `You spend ${costFmt} and may earn ${revenueFmt} → ${verdict}`;
+
+    return {
+      crop:               cropName,
+      seed_cost,
+      fertilizer_cost,
+      pesticide_cost,
+      labour_cost,
+      total_cost,
+      expected_yield_qtl,
+      market_price_per_qtl,
+      gross_revenue,
+      expected_profit,
+      return_ratio,
+      risk_level,
+      risk_reasons,
+      ratio_statement,
+      verdict
+    };
+  }
+
+  /**
+   * Explain how current weather affects the chosen crop.
+   */
+  generateWeatherImpact(weather, cropName) {
+    const crop     = cropName;
+    const rainfall = weather.rainfall_last_30_days || 0;
+    const temp     = weather.temperature || 25;
+    const warnings = [];
+
+    // Season inference from temperature
+    let season = 'Rabi (winter)';
+    if (temp >= 28) season = 'Kharif (monsoon)';
+    else if (temp >= 22) season = 'Zaid (summer)';
+
+    // Crop water requirements
+    const highWaterCrops  = ['rice', 'paddy', 'sugarcane', 'vegetables'];
+    const lowWaterCrops   = ['millets', 'jowar', 'bajra', 'millet', 'sorghum', 'groundnut', 'pulses', 'chickpea', 'cotton'];
+    const cropLower = crop.toLowerCase();
+    const needsHighWater  = highWaterCrops.some(c => cropLower.includes(c));
+    const needsLowWater   = lowWaterCrops.some(c  => cropLower.includes(c));
+
+    let rainfall_effect;
+    if (rainfall < 30) {
+      rainfall_effect = `Rainfall is low (${rainfall} mm in last 30 days). ${crop} needs more water — plan irrigation now.`;
+      warnings.push('⚠️ Low rainfall warning: Irrigate regularly to protect your crop yield.');
+    } else if (rainfall > 150) {
+      rainfall_effect = `Rainfall is high (${rainfall} mm in last 30 days). Ensure drainage to avoid waterlogging near ${crop} roots.`;
+      warnings.push('⚠️ Excess rain warning: Check fields for waterlogging and improve drainage.');
+    } else {
+      rainfall_effect = `Rainfall is moderate (${rainfall} mm in last 30 days). Good for ${crop} growth — continue normal irrigation.`;
+    }
+
+    if (needsHighWater && rainfall < 50) {
+      warnings.push(`⚠️ ${crop} requires high water. Low rain may reduce yield significantly.`);
+    }
+    if (needsLowWater && rainfall > 120) {
+      warnings.push(`⚠️ ${crop} prefers dry conditions. Excess rain may cause fungal diseases.`);
+    }
+
+    let temperature_effect;
+    if (temp < 18) {
+      temperature_effect = `Temperature is cool (${temp}°C). Good for Rabi crops but frost can damage tender plants.`;
+    } else if (temp > 38) {
+      temperature_effect = `Temperature is very high (${temp}°C). Heat stress may reduce yield of ${crop} — provide shade/extra water.`;
+      warnings.push('⚠️ Heat stress warning: High temperature can cause crop wilting.');
+    } else {
+      temperature_effect = `Temperature is suitable (${temp}°C) for growing ${crop} in the ${season} season.`;
+    }
+
+    const season_effect = `It is currently the ${season} season. ${crop} is ${
+      season.includes('Kharif') ? 'a Kharif crop — good time to sow after monsoon rain.' :
+      season.includes('Rabi')   ? 'a Rabi crop — sow after the monsoon retreats, harvest in spring.' :
+                                  'a summer crop — needs irrigation as natural rains are low.'
+    }`;
+
+    const overall_summary = warnings.length === 0
+      ? `Weather looks good for ${crop} this season. Keep monitoring moisture levels.`
+      : `Pay attention to the warnings above to protect your ${crop} yield.`;
+
+    return { crop, season, season_effect, rainfall_effect, temperature_effect, warnings, overall_summary };
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  //  HELPER METHODS
+  // ─────────────────────────────────────────────────────────────────
 
   // Helper methods
 
