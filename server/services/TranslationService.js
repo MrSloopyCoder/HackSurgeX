@@ -158,6 +158,28 @@ class TranslationService {
         translated.location = location;
       }
 
+      // Translate loan recommendations
+      if (analysis.loan_recommendations?.recommended_schemes?.length > 0) {
+        const translatedSchemes = await Promise.all(
+          analysis.loan_recommendations.recommended_schemes.map(async (scheme) => ({
+            ...scheme,
+            name: await this.translateText(scheme.name, targetLang),
+            provider: await this.translateText(scheme.provider, targetLang),
+            max_amount: await this.translateText(scheme.max_amount, targetLang),
+            interest_rate: await this.translateText(scheme.interest_rate, targetLang),
+            repayment: await this.translateText(scheme.repayment, targetLang),
+            subsidy: scheme.subsidy ? await this.translateText(scheme.subsidy, targetLang) : scheme.subsidy,
+            benefits: await Promise.all(scheme.benefits.map(b => this.translateText(b, targetLang)))
+          }))
+        );
+        translated.loan_recommendations = {
+          ...analysis.loan_recommendations,
+          recommended_schemes: translatedSchemes,
+          summary: await this.translateText(analysis.loan_recommendations.summary, targetLang),
+          disclaimer: await this.translateText(analysis.loan_recommendations.disclaimer, targetLang)
+        };
+      }
+
       logger.info('Analysis results translated successfully');
       return translated;
 

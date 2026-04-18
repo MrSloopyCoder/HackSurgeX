@@ -2,7 +2,7 @@ import { useState } from 'react';
 import './AdvisoryReport.css';
 import { t } from '../translations';
 
-function AdvisoryReport({ report, onBack, language = 'en' }) {
+function AdvisoryReport({ report, loanRecommendations, onBack, language = 'en' }) {
   const [expandedSections, setExpandedSections] = useState({
     soil_analysis: true,
     nutrient_status: false,
@@ -10,7 +10,8 @@ function AdvisoryReport({ report, onBack, language = 'en' }) {
     crop_recommendation: false,
     irrigation_advice: false,
     risk_assessment: false,
-    climate_smart_practices: false
+    climate_smart_practices: false,
+    loan_schemes: false
   });
 
   const toggleSection = (section) => {
@@ -292,6 +293,59 @@ function AdvisoryReport({ report, onBack, language = 'en' }) {
             </div>
             <p>{sections.vegetation_status.advice}</p>
           </div>
+        </div>
+      )}
+
+      {/* Loan Schemes */}
+      {loanRecommendations?.recommended_schemes?.length > 0 && (
+        <div className="report-section collapsible">
+          <div className="section-header" onClick={() => toggleSection('loan_schemes')}>
+            <div className="section-icon">🏦</div>
+            <h2>{t('loan_schemes', language)}</h2>
+            <span className="toggle-icon">{expandedSections.loan_schemes ? '▼' : '▶'}</span>
+          </div>
+          {expandedSections.loan_schemes && (
+            <div className="section-content">
+              <p className="explanation">{loanRecommendations.summary}</p>
+              <div className="loan-cards">
+                {loanRecommendations.recommended_schemes.map((scheme, idx) => (
+                  <div key={idx} className="loan-card">
+                    <div className="loan-header">
+                      <h4>{scheme.name}</h4>
+                      <span className={`loan-type-badge loan-${scheme.type}`}>{scheme.type}</span>
+                    </div>
+                    <p className="loan-provider">🏛 {scheme.provider}</p>
+                    <div className="loan-details-grid">
+                      <div className="loan-detail">
+                        <span className="loan-label">{t('max_amount', language)}</span>
+                        <span className="loan-value">{scheme.max_amount}</span>
+                      </div>
+                      <div className="loan-detail">
+                        <span className="loan-label">{t('interest_rate_label', language)}</span>
+                        <span className="loan-value">{scheme.interest_rate}</span>
+                      </div>
+                      <div className="loan-detail">
+                        <span className="loan-label">{t('repayment', language)}</span>
+                        <span className="loan-value">{scheme.repayment}</span>
+                      </div>
+                    </div>
+                    {scheme.subsidy && scheme.subsidy !== 'None' && (
+                      <p className="loan-subsidy">💰 {scheme.subsidy}</p>
+                    )}
+                    <ul className="loan-benefits">
+                      {scheme.benefits.map((b, i) => <li key={i}>✓ {b}</li>)}
+                    </ul>
+                    {scheme.apply_at && (
+                      <a href={scheme.apply_at} target="_blank" rel="noopener noreferrer" className="loan-apply-btn">
+                        {t('apply_now', language)} →
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="loan-disclaimer">⚠️ {loanRecommendations.disclaimer}</p>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -52,7 +52,12 @@ function HomeScreen({ onUpload, language }) {
       <div className="hero-section text-center">
         <div className="hero-badge glass-panel">
           <Leaf className="hero-icon" size={24} />
-          <span>Smart Agriculture</span>
+          <span>{
+            { en: 'SITA AI', hi: 'सीता AI', kn: 'ಸೀತಾ AI', ta: 'சீதா AI',
+              te: 'సీత AI', mr: 'सीता AI', bn: 'সীতা AI', gu: 'સીતા AI',
+              pa: 'ਸੀਤਾ AI', ml: 'സീത AI', or: 'ସୀତା AI', as: 'সীতা AI'
+            }[language] || 'SITA AI'
+          }</span>
         </div>
         <h1 className="hero-title text-gradient">{greetings[language]}</h1>
         <p className="hero-subtitle">{subtitles[language]}</p>

@@ -24,6 +24,7 @@ import { AgriculturalAdvisorService } from './services/AgriculturalAdvisorServic
 import translationService from './services/TranslationService.js';
 import sarvamTTSService from './services/SarvamTTSService.js';
 import marketPriceService from './services/MarketPriceService.js';
+import loanRecommendationService from './services/LoanRecommendationService.js';
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -208,6 +209,10 @@ app.post('/api/analyze', upload.single('image'), async (req, res) => {
     console.log('Generating agricultural advisory report...');
     const advisoryReport = advisorService.generateReport(analysis, language);
     analysis.advisory_report = advisoryReport;
+
+    // Step 8b: Generate loan recommendations
+    console.log('Generating loan recommendations...');
+    analysis.loan_recommendations = loanRecommendationService.recommend(analysis);
 
     // Step 9: Translate results to user's language
     if (language && language !== 'en') {

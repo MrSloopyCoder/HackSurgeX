@@ -116,23 +116,25 @@ class AutonomousAgentService {
         // Continue without audio - don't fail the whole workflow
       }
 
-      // Step 5: Return results and play audio chunks
+      // Step 5: Return results to UI first
       this.updateStatus(5, 'Displaying results...');
       console.log('[Agent] Step 5: Returning results to UI');
       
-      // Return results to UI with agentic flag (use regular card format, not paragraph)
       if (this.resultCallback) {
         console.log('[Agent] Calling result callback');
         this.resultCallback({
           analysis: analysisResult,
-          audioBlobs: audioBlobs, // Array of audio blobs
-          isAgenticWorkflow: true // Flag to indicate this is from autonomous agent
+          audioBlobs: audioBlobs,
+          isAgenticWorkflow: true
         });
       } else {
         console.error('[Agent] No result callback set!');
       }
 
-      // Play audio chunks sequentially if available
+      // Wait for the result screen to fully render before playing audio
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Play audio chunks sequentially after report is displayed
       if (audioBlobs.length > 0) {
         console.log('[Agent] Playing', audioBlobs.length, 'audio chunks');
         this.updateStatus(5, 'Speaking results...');

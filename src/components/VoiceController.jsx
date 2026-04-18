@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import sarvamVoiceService from '../services/sarvamVoiceService';
 import autonomousAgentService from '../services/autonomousAgentService';
+import { t } from '../translations';
 import './VoiceController.css';
 
 function VoiceController({ onCommand, onLanguageDetected, currentLanguage, onClose, onPhotoCapture }) {
@@ -11,7 +12,7 @@ function VoiceController({ onCommand, onLanguageDetected, currentLanguage, onClo
   const [showPhotoOptions, setShowPhotoOptions] = useState(false);
   const [agentStatus, setAgentStatus] = useState(null);
   const [isAgentProcessing, setIsAgentProcessing] = useState(false);
-  
+
   const canvasRef = useRef(null);
   const animationRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -20,93 +21,63 @@ function VoiceController({ onCommand, onLanguageDetected, currentLanguage, onClo
   const cameraInputRef = useRef(null);
   const galleryInputRef = useRef(null);
 
+  // Auto-start recording when modal opens
   useEffect(() => {
-    return () => {
-      stopVisualization();
-    };
+    startRecording();
+    return () => stopVisualization();
   }, []);
 
   const startVisualization = (stream) => {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const analyser = audioContext.createAnalyser();
     const microphone = audioContext.createMediaStreamSource(stream);
-    
     analyser.fftSize = 256;
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
-    
     microphone.connect(analyser);
-    
     audioContextRef.current = audioContext;
     analyserRef.current = analyser;
     dataArrayRef.current = dataArray;
-    
     drawVisualization();
   };
 
   const drawVisualization = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
     const ctx = canvas.getContext('2d');
-    const analyser = analyserRef.current;
-    const dataArray = dataArrayRef.current;
-    
-    if (!analyser || !dataArray) return;
-    
     const draw = () => {
       animationRef.current = requestAnimationFrame(draw);
-      
+      const analyser = analyserRef.current;
+      const dataArray = dataArrayRef.current;
+      if (!analyser || !dataArray) return;
       analyser.getByteFrequencyData(dataArray);
-      
-      // Calculate average audio level
       const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
       setAudioLevel(average);
-      
-      // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw waveform
       const barCount = 40;
       const barWidth = canvas.width / barCount;
       const centerY = canvas.height / 2;
-      
       for (let i = 0; i < barCount; i++) {
         const dataIndex = Math.floor(i * dataArray.length / barCount);
         const value = dataArray[dataIndex];
         const barHeight = (value / 255) * (canvas.height / 2);
-        
-        // Gradient color based on intensity
         const intensity = value / 255;
-        const hue = 140 - (intensity * 40); // Green to yellow-green
+        const hue = 140 - (intensity * 40);
         ctx.fillStyle = `hsl(${hue}, 70%, 50%)`;
-        
-        // Draw symmetric bars
-        ctx.fillRect(
-          i * barWidth,
-          centerY - barHeight / 2,
-          barWidth - 2,
-          barHeight
-        );
+        ctx.fillRect(i * barWidth, centerY - barHeight / 2, barWidth - 2, barHeight);
       }
     };
-    
     draw();
   };
 
   const stopVisualization = () => {
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-    }
+    if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    if (audioContextRef.current) audioContextRef.current.close();
   };
 
   const handleVoiceCommand = (text) => {
     const lowerText = text.toLowerCase();
-    
-    // Language detection keywords
+
     const languageKeywords = {
       'en': ['english', 'अंग्रेजी', 'ಇಂಗ್ಲಿಷ್', 'ஆங்கிலம்', 'ఇంగ్లీష్', 'इंग्रजी', 'ইংরেজি', 'અંગ્રેજી', 'ਅੰਗਰੇਜ਼ੀ', 'ഇംഗ്ലീഷ്', 'ଇଂରାଜୀ', 'ইংৰাজী'],
       'hi': ['hindi', 'हिंदी', 'ಹಿಂದಿ', 'இந்தி', 'హిందీ', 'हिन्दी', 'হিন্দি', 'હિન્દી', 'ਹਿੰਦੀ', 'ഹിന്ദി', 'ହିନ୍ଦୀ', 'হিন্দী'],
@@ -117,12 +88,11 @@ function VoiceController({ onCommand, onLanguageDetected, currentLanguage, onClo
       'bn': ['bengali', 'bangla', 'बंगाली', 'ಬಂಗಾಳಿ', 'வங்காளம்', 'బెంగాలీ', 'बांग्ला', 'বাংলা', 'બંગાળી', 'ਬੰਗਾਲੀ', 'ബംഗാളി', 'ବଙ୍ଗାଳୀ', 'বাংলা'],
       'gu': ['gujarati', 'गुजराती', 'ಗುಜರಾತಿ', 'குஜராத்தி', 'గుజరాతీ', 'गुजराती', 'গুজরাটি', 'ગુજરાતી', 'ਗੁਜਰਾਤੀ', 'ഗുജറാത്തി', 'ଗୁଜରାଟୀ', 'গুজৰাটী'],
       'pa': ['punjabi', 'पंजाबी', 'ಪಂಜಾಬಿ', 'பஞ்சாபி', 'పంజాబీ', 'पंजाबी', 'পাঞ্জাবি', 'પંજાબી', 'ਪੰਜਾਬੀ', 'പഞ്ചാബി', 'ପଞ୍ଜାବୀ', 'পাঞ্জাবী'],
-      'ml': ['malayalam', 'मलयालम', 'ಮಲಯಾಳಂ', 'மலையாளம்', 'మలయాళం', 'मल्याळम', 'মালায়ালাম', 'મલયાલમ', 'ਮਲਿਆਲਮ', 'മലയാളം', 'ମାଲାୟାଲମ', 'মালায়ালম'],
-      'or': ['odia', 'oriya', 'ओड़िया', 'ಒಡಿಯಾ', 'ஒடியா', 'ఒడియా', 'ओडिया', 'ওড়িয়া', 'ઓડિયા', 'ਓੜੀਆ', 'ഒഡിയ', 'ଓଡ଼ିଆ', 'অসমীয়া'],
-      'as': ['assamese', 'असमिया', 'ಅಸ್ಸಾಮೀಸ್', 'அஸ்ஸாமி', 'అస్సామీస్', 'आसामी', 'আসামি', 'આસામી', 'ਅਸਾਮੀ', 'അസ്സാമീസ്', 'ଆସାମୀ', 'অসমীয়া']
+      'ml': ['malayalam', 'मलयालम', 'ಮಲಯಾಳಂ', 'மலையாளம்', 'మలయాళం', 'मल्याळम', 'মালায়ালাম', 'મલयાలమ', 'ਮਲਿਆਲਮ', 'മലയാളം', 'ମାଲାୟାଲମ', 'মালায়ালম'],
+      'or': ['odia', 'oriya', 'ओड़िया', 'ಒಡಿಯಾ', 'ஒடியா', 'ఒడియా', 'ओडिया', 'ওড়িয়া', 'ઓડિયા', 'ਓੜੀਆ', 'ഒഡിയ', 'ଓଡ଼ିଆ'],
+      'as': ['assamese', 'असमिया', 'ಅಸ್ಸಾಮೀಸ್', 'அஸ்ஸாமி', 'అస్సామీస్', 'आसामी', 'আসামি', 'આસામী', 'ਅਸਾਮੀ', 'അസ്സാമീസ്', 'ଆସାମୀ', 'অসমীয়া']
     };
 
-    // Check for language change command
     for (const [langCode, keywords] of Object.entries(languageKeywords)) {
       if (keywords.some(keyword => lowerText.includes(keyword))) {
         onLanguageDetected(langCode);
@@ -130,73 +100,46 @@ function VoiceController({ onCommand, onLanguageDetected, currentLanguage, onClo
       }
     }
 
-    // Check for autonomous soil analysis command
-    const analyzeKeywords = ['analyze', 'analyse', 'soil', 'check soil', 'test soil', 'scan soil', 
-      'विश्लेषण', 'मिट्टी', 'ವಿಶ್ಲೇಷಣೆ', 'மண்', 'విశ్లేషణ', 'నేల', 'विश्लेषण', 'माती',
+    const analyzeKeywords = ['analyze', 'analyse', 'soil', 'check soil', 'test soil', 'scan soil',
+      'विश्लेषण', 'मिट्टी', 'ವಿಶ್ಲೇಷಣೆ', 'மண்', 'విశ్లేషణ', 'నేల', 'माती',
       'বিশ্লেষণ', 'মাটি', 'વિશ્લેષણ', 'માટી', 'ਵਿਸ਼ਲੇਸ਼ਣ', 'ਮਿੱਟੀ', 'വിശകലനം', 'മണ്ണ്',
-      'ବିଶ୍ଳେଷଣ', 'ମାଟି', 'বিশ্লেষণ', 'মাটি'];
-    
-    const isAnalyzeCommand = analyzeKeywords.some(keyword => lowerText.includes(keyword));
-    
-    if (isAnalyzeCommand) {
-      console.log('🤖 Autonomous soil analysis triggered!');
-      setTranscript('Starting autonomous soil analysis...');
+      'ବିଶ୍ଳେଷଣ', 'ମାଟି'];
+
+    if (analyzeKeywords.some(keyword => lowerText.includes(keyword))) {
+      setTranscript(t('starting_analysis', currentLanguage));
       setIsAgentProcessing(true);
-      
-      // Setup agent callbacks
       autonomousAgentService.setCallbacks(
-        (status) => {
-          setAgentStatus(status);
-          setTranscript(status.message);
-        },
+        (status) => { setAgentStatus(status); setTranscript(status.message); },
         (result) => {
-          // Pass result to parent with agentic flag
-          if (onCommand) {
-            onCommand('analysis_complete', {
-              ...result.analysis,
-              agenticExplanation: result.explanation,
-              audioBlobs: result.audioBlobs,
-              isAgenticWorkflow: result.isAgenticWorkflow
-            });
-          }
+          if (onCommand) onCommand('analysis_complete', { ...result.analysis, audioBlobs: result.audioBlobs, isAgenticWorkflow: result.isAgenticWorkflow });
           setIsAgentProcessing(false);
-          setTimeout(() => {
-            onClose();
-          }, 1000);
+          setTimeout(() => onClose(), 1000);
         }
       );
-      
-      // Execute autonomous workflow
       autonomousAgentService.executeAnalysisWorkflow(currentLanguage);
       return;
     }
 
-    // Check for photo/camera commands
-    const photoKeywords = ['photo', 'picture', 'camera', 'take', 'capture', 'upload', 'फोटो', 'ಫೋಟೋ', 'புகைப்படம்', 'ఫోటో', 'फोटो', 'ছবি', 'ફોટો', 'ਫੋਟੋ', 'ഫോട്ടോ', 'ଫଟୋ', 'ফটো'];
+    const photoKeywords = ['photo', 'picture', 'camera', 'take', 'capture', 'upload',
+      'फोटो', 'ಫೋಟೋ', 'புகைப்படம்', 'ఫోటో', 'ছবি', 'ફોટો', 'ਫੋਟੋ', 'ഫോട്ടോ', 'ଫଟୋ', 'ফটো'];
     if (photoKeywords.some(keyword => lowerText.includes(keyword))) {
-      console.log('Photo command detected');
-      setTranscript('Opening photo options...');
-      setTimeout(() => {
-        setShowPhotoOptions(true);
-      }, 500);
+      setTranscript(t('opening_photo', currentLanguage));
+      setTimeout(() => setShowPhotoOptions(true), 500);
       return;
     }
 
-    // Check for action commands
     const commands = {
-      history: ['history', 'previous', 'past', 'show', 'इतिहास', 'ಇತಿಹಾಸ', 'வரலாறு', 'చరిత్ర', 'इतिहास', 'ইতিহাস', 'ઇતિહાસ', 'ਇਤਿਹਾਸ', 'ചരിത്രം', 'ଇତିହାସ', 'ইতিহাস', 'record', 'results'],
-      settings: ['settings', 'setting', 'सेटिंग', 'ಸೆಟ್ಟಿಂಗ್', 'அமைப்புகள்', 'సెట్టింగ్స్', 'सेटिंग', 'সেটিংস', 'સેટિંગ્સ', 'ਸੈਟਿੰਗਾਂ', 'ക്രമീകരണങ്ങൾ', 'ସେଟିଂସ', 'ছেটিংছ', 'change language', 'preferences']
+      history: ['history', 'previous', 'past', 'show', 'इतिहास', 'ಇತಿಹಾಸ', 'வரலாறு', 'చరిత్ర', 'ইতিহাস', 'ઇતિહાસ', 'ਇਤਿਹਾਸ', 'ചരിത്രം', 'ଇତିହାସ', 'record', 'results'],
+      settings: ['settings', 'setting', 'सेटिंग', 'ಸೆಟ್ಟಿಂಗ್', 'அமைப்புகள்', 'సెట్టింగ్స్', 'সেটিংস', 'સેટિંગ્સ', 'ਸੈਟਿੰਗਾਂ', 'ക്രമീകരണങ്ങൾ', 'ସେଟିଂସ', 'change language', 'preferences']
     };
 
     for (const [action, keywords] of Object.entries(commands)) {
       if (keywords.some(keyword => lowerText.includes(keyword))) {
-        console.log('Voice command detected:', action);
         onCommand(action);
         return;
       }
     }
 
-    // If no command matched, just pass the transcript
     onCommand('transcript', text);
   };
 
@@ -204,11 +147,8 @@ function VoiceController({ onCommand, onLanguageDetected, currentLanguage, onClo
     try {
       setError(null);
       setTranscript('');
-      
       const stream = await sarvamVoiceService.startRecording();
       setIsRecording(true);
-      
-      // Start visualization
       startVisualization(stream);
     } catch (err) {
       setError(err.message);
@@ -219,55 +159,42 @@ function VoiceController({ onCommand, onLanguageDetected, currentLanguage, onClo
   const stopRecording = async () => {
     try {
       stopVisualization();
-      
       const audioBlob = await sarvamVoiceService.stopRecording();
       setIsRecording(false);
       setAudioLevel(0);
-      
-      // Check if audio was actually recorded
+
       if (audioBlob.size < 1000) {
-        setError('Recording too short. Please speak for at least 1 second.');
+        setError(t('recording_too_short', currentLanguage));
         return;
       }
-      
-      // Show processing state
-      setTranscript('Processing...');
-      
+
+      setTranscript(t('processing', currentLanguage));
+
       try {
-        // Convert speech to text using Sarvam AI
         const languageCode = sarvamVoiceService.getLanguageCode(currentLanguage);
-        console.log('Processing audio with language:', languageCode);
-        
         const text = await sarvamVoiceService.speechToText(audioBlob, languageCode);
-        
+
         if (!text || text.trim() === '') {
-          setTranscript('No speech detected. Please try again.');
+          setTranscript(t('no_speech', currentLanguage));
           return;
         }
-        
+
         setTranscript(text);
-        
-        // Check if command will show photo options
+
         const lowerText = text.toLowerCase();
-        const photoKeywords = ['photo', 'picture', 'camera', 'take', 'capture', 'upload', 'फोटो', 'ಫೋಟೋ', 'புகைப்படம்', 'ఫోటో', 'फोटो', 'ছবি', 'ફોટો', 'ਫੋਟੋ', 'ഫോട്ടോ', 'ଫଟୋ', 'ফটো'];
+        const photoKeywords = ['photo', 'picture', 'camera', 'take', 'capture', 'upload',
+          'फोटो', 'ಫೋಟೋ', 'புகைப்படம்', 'ఫోటో', 'ছবি', 'ફોટો', 'ਫੋਟੋ', 'ഫോട്ടോ', 'ଫଟୋ', 'ফটো'];
         const isPhotoCommand = photoKeywords.some(keyword => lowerText.includes(keyword));
-        
+
         handleVoiceCommand(text);
-        
-        // Only auto close if NOT a photo command
-        if (!isPhotoCommand) {
-          setTimeout(() => {
-            onClose();
-          }, 2000);
-        }
+
+        if (!isPhotoCommand) setTimeout(() => onClose(), 2000);
       } catch (apiError) {
-        console.error('API Error:', apiError);
-        setError(apiError.message || 'Failed to process speech. Please try again.');
+        setError(apiError.message || t('processing_failed', currentLanguage));
         setTranscript('');
       }
     } catch (err) {
-      console.error('Stop recording error:', err);
-      setError(err.message || 'Failed to stop recording');
+      setError(err.message || t('recording_failed', currentLanguage));
       setIsRecording(false);
       setAudioLevel(0);
       stopVisualization();
@@ -277,36 +204,44 @@ function VoiceController({ onCommand, onLanguageDetected, currentLanguage, onClo
   const handlePhotoSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      console.log('Photo selected:', file.name);
-      if (onPhotoCapture) {
-        onPhotoCapture(file);
-      }
+      if (onPhotoCapture) onPhotoCapture(file);
       onClose();
     }
   };
+
+  // Translated hint chips based on language
+  const hints = {
+    en: ['"Analyze the soil"', '"Take photo"', '"Show history"'],
+    hi: ['"मिट्टी का विश्लेषण करें"', '"फोटो लें"', '"इतिहास दिखाएं"'],
+    kn: ['"ಮಣ್ಣು ವಿಶ್ಲೇಷಿಸಿ"', '"ಫೋಟೋ ತೆಗೆಯಿರಿ"', '"ಇತಿಹಾಸ ತೋರಿಸಿ"'],
+    ta: ['"மண் பகுப்பாய்வு"', '"புகைப்படம் எடு"', '"வரலாறு காட்டு"'],
+    te: ['"నేల విశ్లేషించు"', '"ఫోటో తీయి"', '"చరిత్ర చూపు"'],
+    mr: ['"माती विश्लेषण करा"', '"फोटो घ्या"', '"इतिहास दाखवा"'],
+    bn: ['"মাটি বিশ্লেষণ করুন"', '"ছবি তুলুন"', '"ইতিহাস দেখান"'],
+    gu: ['"માટી વિશ્લેષણ"', '"ફોટો લો"', '"ઇતિહાસ બતાવો"'],
+    pa: ['"ਮਿੱਟੀ ਵਿਸ਼ਲੇਸ਼ਣ"', '"ਫੋਟੋ ਲਓ"', '"ਇਤਿਹਾਸ ਦਿਖਾਓ"'],
+    ml: ['"മണ്ണ് വിശകലനം"', '"ഫോട്ടോ എടുക്കുക"', '"ചരിത്രം കാണുക"'],
+    or: ['"ମାଟି ବିଶ୍ଳେଷଣ"', '"ଫଟୋ ନିଅ"', '"ଇତିହାସ ଦେଖ"'],
+    as: ['"মাটি বিশ্লেষণ"', '"ফটো লওক"', '"ইতিহাস দেখুৱাওক"'],
+  };
+  const currentHints = hints[currentLanguage] || hints['en'];
 
   return (
     <div className="voice-controller-overlay">
       <div className="voice-controller-modal">
         <button className="voice-close-btn" onClick={onClose}>×</button>
-        
+
         {!showPhotoOptions ? (
           <>
             <div className="voice-header">
-              <h2>🎙️ Voice Command</h2>
+              <h2>🎙️ {t('voice_command', currentLanguage)}</h2>
               <p className="voice-subtitle">
-                {isRecording ? 'Listening...' : 'Tap to start recording'}
+                {isRecording ? t('listening', currentLanguage) : t('processing', currentLanguage)}
               </p>
             </div>
 
             <div className="voice-visualizer-container">
-              <canvas 
-                ref={canvasRef} 
-                className="voice-canvas"
-                width="300"
-                height="120"
-              />
-              
+              <canvas ref={canvasRef} className="voice-canvas" width="300" height="120" />
               {!isRecording && audioLevel === 0 && (
                 <div className="voice-placeholder">
                   <div className="placeholder-bars">
@@ -320,68 +255,48 @@ function VoiceController({ onCommand, onLanguageDetected, currentLanguage, onClo
 
             <div className="voice-level-indicator">
               <div className="level-bar">
-                <div 
-                  className="level-fill"
-                  style={{ width: `${(audioLevel / 255) * 100}%` }}
-                ></div>
+                <div className="level-fill" style={{ width: `${(audioLevel / 255) * 100}%` }}></div>
               </div>
               <span className="level-text">
-                {isRecording ? `${Math.round((audioLevel / 255) * 100)}%` : 'Ready'}
+                {isRecording ? `${Math.round((audioLevel / 255) * 100)}%` : t('ready', currentLanguage)}
               </span>
             </div>
 
             {transcript && (
-              <div className="voice-transcript">
-                <p>{transcript}</p>
-              </div>
+              <div className="voice-transcript"><p>{transcript}</p></div>
             )}
 
             {error && (
-              <div className="voice-error">
-                <p>⚠️ {error}</p>
+              <div className="voice-error"><p>⚠️ {error}</p></div>
+            )}
+
+            {/* Done button — only shown while recording */}
+            {isRecording && (
+              <div className="voice-controls">
+                <button className="voice-stop-btn" onClick={stopRecording}>
+                  <span className="stop-icon">⏹️</span>
+                  <span>{t('done', currentLanguage)}</span>
+                </button>
               </div>
             )}
 
-            <div className="voice-controls">
-              {!isRecording ? (
-                <button 
-                  className="voice-record-btn"
-                  onClick={startRecording}
-                >
-                  <span className="record-icon">🎙️</span>
-                  <span>Start Recording</span>
-                </button>
-              ) : (
-                <button 
-                  className="voice-stop-btn"
-                  onClick={stopRecording}
-                >
-                  <span className="stop-icon">⏹️</span>
-                  <span>Stop Recording</span>
-                </button>
-              )}
-            </div>
-
             <div className="voice-hints">
-              <p className="hints-title">Try saying:</p>
+              <p className="hints-title">{t('try_saying', currentLanguage)}</p>
               <div className="hints-list">
-                <span className="hint-chip">"Analyze the soil"</span>
-                <span className="hint-chip">"Take photo"</span>
-                <span className="hint-chip">"Show history"</span>
+                {currentHints.map((hint, i) => (
+                  <span key={i} className="hint-chip">{hint}</span>
+                ))}
               </div>
             </div>
 
             {isAgentProcessing && agentStatus && (
               <div className="agent-status">
                 <div className="agent-step">
-                  <span className="step-number">Step {agentStatus.step}</span>
+                  <span className="step-number">{t('step', currentLanguage)} {agentStatus.step}</span>
                   <span className="step-message">{agentStatus.message}</span>
                 </div>
                 <div className="agent-progress">
-                  <div 
-                    className="progress-bar"
-                    style={{ width: `${(agentStatus.step / 6) * 100}%` }}
-                  ></div>
+                  <div className="progress-bar" style={{ width: `${(agentStatus.step / 6) * 100}%` }}></div>
                 </div>
               </div>
             )}
@@ -389,52 +304,28 @@ function VoiceController({ onCommand, onLanguageDetected, currentLanguage, onClo
         ) : (
           <>
             <div className="voice-header">
-              <h2>📷 Capture Photo</h2>
-              <p className="voice-subtitle">Choose an option</p>
+              <h2>📷 {t('capture_photo', currentLanguage)}</h2>
+              <p className="voice-subtitle">{t('choose_option', currentLanguage)}</p>
             </div>
 
-            <input
-              ref={cameraInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handlePhotoSelect}
-              style={{ display: 'none' }}
-            />
-
-            <input
-              ref={galleryInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handlePhotoSelect}
-              style={{ display: 'none' }}
-            />
+            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoSelect} style={{ display: 'none' }} />
+            <input ref={galleryInputRef} type="file" accept="image/*" onChange={handlePhotoSelect} style={{ display: 'none' }} />
 
             <div className="photo-options">
-              <button 
-                className="photo-option-btn"
-                onClick={() => cameraInputRef.current.click()}
-              >
+              <button className="photo-option-btn" onClick={() => cameraInputRef.current.click()}>
                 <span className="option-icon">📷</span>
-                <span className="option-text">Take Photo</span>
-                <span className="option-desc">Open camera</span>
+                <span className="option-text">{t('take_photo', currentLanguage)}</span>
+                <span className="option-desc">{t('open_camera', currentLanguage)}</span>
               </button>
-
-              <button 
-                className="photo-option-btn"
-                onClick={() => galleryInputRef.current.click()}
-              >
+              <button className="photo-option-btn" onClick={() => galleryInputRef.current.click()}>
                 <span className="option-icon">🖼️</span>
-                <span className="option-text">Upload Photo</span>
-                <span className="option-desc">From gallery</span>
+                <span className="option-text">{t('upload_photo', currentLanguage)}</span>
+                <span className="option-desc">{t('from_gallery', currentLanguage)}</span>
               </button>
             </div>
 
-            <button 
-              className="btn-back-voice"
-              onClick={() => setShowPhotoOptions(false)}
-            >
-              ← Back to Voice
+            <button className="btn-back-voice" onClick={() => setShowPhotoOptions(false)}>
+              ← {t('back_to_voice', currentLanguage)}
             </button>
           </>
         )}

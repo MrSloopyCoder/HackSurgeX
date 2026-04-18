@@ -514,3 +514,56 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Loan Schemes Section */
+.loan-cards { display: flex; flex-direction: column; gap: 16px; margin-top: 12px; }
+
+.loan-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.loan-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+.loan-header h4 { margin: 0; font-size: 0.95rem; color: var(--text-primary, #fff); }
+
+.loan-type-badge {
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.loan-government { background: rgba(16,185,129,0.2); color: #10b981; }
+.loan-bank { background: rgba(59,130,246,0.2); color: #60a5fa; }
+.loan-nbfc { background: rgba(245,158,11,0.2); color: #fbbf24; }
+.loan-insurance-linked { background: rgba(139,92,246,0.2); color: #a78bfa; }
+
+.loan-provider { font-size: 0.78rem; color: var(--text-secondary, #aaa); margin: 4px 0 10px; }
+
+.loan-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.loan-detail { display: flex; flex-direction: column; gap: 2px; }
+.loan-label { font-size: 0.7rem; color: var(--text-tertiary, #888); }
+.loan-value { font-size: 0.82rem; font-weight: 600; color: var(--text-primary, #fff); }
+
+.loan-subsidy { font-size: 0.8rem; color: #10b981; margin: 6px 0; }
+
+.loan-benefits { list-style: none; padding: 0; margin: 8px 0; }
+.loan-benefits li { font-size: 0.8rem; color: var(--text-secondary, #aaa); padding: 2px 0; }
+
+.loan-apply-btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 6px 14px;
+  background: rgba(16,185,129,0.15);
+  border: 1px solid #10b981;
+  border-radius: 8px;
+  color: #10b981;
+  font-size: 0.82rem;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.loan-disclaimer { font-size: 0.72rem; color: var(--text-tertiary, #888); margin-top: 14px; font-style: italic; }

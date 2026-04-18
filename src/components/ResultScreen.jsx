@@ -77,7 +77,13 @@ function ResultScreen({ result, onBack, language }) {
   };
 
   if (showReport && result.advisory_report) {
-    return <AdvisoryReport report={result.advisory_report} onBack={() => setShowReport(false)} language={language} />;
+    const analysis = result.analysis || result;
+    return <AdvisoryReport
+      report={result.advisory_report}
+      loanRecommendations={analysis.loan_recommendations}
+      onBack={() => setShowReport(false)}
+      language={language}
+    />;
   }
 
   const analysis = result.analysis || result;
@@ -488,6 +494,23 @@ function ResultScreen({ result, onBack, language }) {
       )}
 
       <div className="action-stack mb-8">
+        {/* Loan Schemes Preview */}
+        {analysis.loan_recommendations?.recommended_schemes?.length > 0 && (
+          <div className="data-card glass-panel col-span-2 mb-2">
+            <div className="data-header">
+              <span style={{fontSize:'1.2rem'}}>🏦</span>
+              <h3>{t('loan_schemes', language)}</h3>
+            </div>
+            <div className="tags-container mt-3">
+              {analysis.loan_recommendations.recommended_schemes.map((s, i) => (
+                <span key={i} className="glass-tag">{s.name}</span>
+              ))}
+            </div>
+            <p className="data-p mt-2" style={{fontSize:'0.78rem', opacity:0.7}}>
+              {analysis.loan_recommendations.summary}
+            </p>
+          </div>
+        )}
         {analysis.advisory_report && (
           <button className="btn btn-primary" onClick={() => setShowReport(true)}>
             <FileText size={20} />

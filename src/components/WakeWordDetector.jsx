@@ -5,17 +5,19 @@ import './WakeWordDetector.css';
 const WAKE_WORDS = ['sita', 'hey sita', 'sita ai', 'seeta', 'hey seeta'];
 
 function WakeWordDetector({ onWakeWordDetected, language = 'en' }) {
-  const [isEnabled, setIsEnabled] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [isFadingOut, setIsFadingOut] = useState(false);
   const recognitionRef = useRef(null);
-  const enabledRef = useRef(false);
+  const enabledRef = useRef(true);
 
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const supported = !!SpeechRecognition;
 
   useEffect(() => {
-    return () => stopRecognition();
+    if (supported) startRecognition();
+    return () => {
+      enabledRef.current = false;
+      stopRecognition();
+    };
   }, []);
 
   const startRecognition = () => {
@@ -41,7 +43,6 @@ function WakeWordDetector({ onWakeWordDetected, language = 'en' }) {
     };
 
     recognition.onend = () => {
-      // Auto-restart if still enabled
       if (enabledRef.current) {
         try { recognition.start(); } catch (_) {}
       }
@@ -50,8 +51,6 @@ function WakeWordDetector({ onWakeWordDetected, language = 'en' }) {
     recognition.onerror = (e) => {
       if (e.error === 'not-allowed') {
         console.warn('Microphone permission denied for wake word');
-        setIsEnabled(false);
-        enabledRef.current = false;
       }
     };
 
@@ -65,26 +64,10 @@ function WakeWordDetector({ onWakeWordDetected, language = 'en' }) {
     }
   };
 
-  const toggle = () => {
-    if (!supported) return;
-
-    if (isEnabled) {
-      enabledRef.current = false;
-      stopRecognition();
-      setIsEnabled(false);
-      setIsFadingOut(false);
-    } else {
-      enabledRef.current = true;
-      startRecognition();
-      setIsEnabled(true);
-      setTimeout(() => setIsFadingOut(true), 1500);
-    }
-  };
-
   if (!supported) return null;
 
   return (
-    <div className={`wake-word-detector ${isFadingOut ? 'fade-out' : ''}`}>
+    <div className="wake-word-detector">
       <div className="wake-word-header">
         <div className="wake-word-info">
           <span className="wake-word-icon">🎤</span>
@@ -93,25 +76,12 @@ function WakeWordDetector({ onWakeWordDetected, language = 'en' }) {
             <p>{t('say_to_activate', language)}</p>
           </div>
         </div>
-        <button
-          className={`wake-word-toggle ${isEnabled ? 'active' : ''}`}
-          onClick={toggle}
-        >
-          {isEnabled ? t('on', language) : t('off', language)}
-        </button>
       </div>
 
       {isListening && (
         <div className="wake-word-listening">
           <div className="pulse-animation"></div>
           <span>{t('wake_detected', language)}</span>
-        </div>
-      )}
-
-      {isEnabled && !isListening && (
-        <div className="wake-word-status">
-          <div className="status-indicator active"></div>
-          <span>{t('listening_for', language)}</span>
         </div>
       )}
     </div>
