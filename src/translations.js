@@ -131,7 +131,17 @@ export const translations = {
     'max_amount': 'Max Amount',
     'interest_rate_label': 'Interest Rate',
     'repayment': 'Repayment',
-    'apply_now': 'Apply Now'
+    'apply_now': 'Apply Now',
+    'view_loan_schemes': 'View Loan & Subsidy Schemes',
+    'subsidy_details': 'Subsidy Details',
+    'benefits': 'Benefits',
+    'special_features': 'Special Features',
+    'documents_required': 'Documents Required',
+    'eligibility': 'Eligibility',
+    'farmer_type': 'Farmer Type',
+    'land_requirement': 'Land Requirement',
+    'eligible_states': 'Eligible States',
+    'no_loans': 'No loan schemes available for your profile.'
   },
 
   hi: {
@@ -258,6 +268,16 @@ export const translations = {
     'interest_rate_label': 'ब्याज दर',
     'repayment': 'पुनर्भुगतान',
     'apply_now': 'अभी आवेदन करें',
+    'view_loan_schemes': 'ऋण और सब्सिडी योजनाएं देखें',
+    'subsidy_details': 'सब्सिडी विवरण',
+    'benefits': 'लाभ',
+    'special_features': 'विशेष सुविधाएं',
+    'documents_required': 'आवश्यक दस्तावेज़',
+    'eligibility': 'पात्रता',
+    'farmer_type': 'किसान प्रकार',
+    'land_requirement': 'भूमि आवश्यकता',
+    'eligible_states': 'पात्र राज्य',
+    'no_loans': 'आपके प्रोफ़ाइल के लिए कोई ऋण योजना उपलब्ध नहीं है।',
 
     // Common
     'low': 'कम',

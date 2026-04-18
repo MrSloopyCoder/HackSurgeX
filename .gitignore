@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 server/node_modules/
+.venv/
+*.pth
+*.json (if large dataset)
 
 # Build outputs
 dist/

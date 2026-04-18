@@ -28,7 +28,7 @@ class LoanRecommendationService {
           state.toLowerCase().includes(s.toLowerCase())
         );
         if (stateMatch) score += 3;
-        else return null; // Skip state-specific schemes for other states
+        else return null;
       }
 
       // Boost if soil type matches
@@ -51,7 +51,7 @@ class LoanRecommendationService {
     })
     .filter(Boolean)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 4) // Top 4 recommendations
+    .slice(0, 6) // Top 6 for detailed view
     .map(({ scheme }) => ({
       name: scheme.scheme_name,
       type: scheme.scheme_type,
@@ -60,18 +60,59 @@ class LoanRecommendationService {
       max_amount: scheme.max_loan_amount,
       interest_rate: scheme.interest_rate,
       subsidy: scheme.subsidy_details,
-      benefits: scheme.benefits.slice(0, 3),
+      eligibility: scheme.eligibility,
       documents: scheme.documents_required,
-      apply_at: scheme.application_process.official_portal,
+      application_process: scheme.application_process,
+      apply_at: scheme.application_process?.official_portal || '',
+      benefits: scheme.benefits,
+      special_features: scheme.special_features || [],
       repayment: scheme.repayment_tenure,
-      tags: scheme.tags
+      tags: scheme.tags,
+      // Full TTS-ready description
+      tts_description: this.buildTTSDescription(scheme)
     }));
+
+    const summary = `${scored.length} loan and subsidy schemes are available for your farm. ` +
+      scored.map(s => s.name).join(', ') + '.';
 
     return {
       recommended_schemes: scored,
-      summary: `${scored.length} loan schemes available for your farm profile.`,
-      disclaimer: 'Eligibility subject to bank/government verification. Visit official portals for latest terms.'
+      summary,
+      disclaimer: 'Eligibility is subject to bank and government verification. Visit official portals for the latest terms and conditions.',
+      tts_full: this.buildFullTTS(scored)
     };
+  }
+
+  buildTTSDescription(scheme) {
+    const parts = [];
+    parts.push(`${scheme.scheme_name} by ${scheme.provider}.`);
+    parts.push(`Loan type: ${scheme.loan_type}.`);
+    parts.push(`Maximum loan amount: ${scheme.max_loan_amount}.`);
+    parts.push(`Interest rate: ${scheme.interest_rate}.`);
+    if (scheme.subsidy_details && scheme.subsidy_details !== 'None') {
+      parts.push(`Subsidy: ${scheme.subsidy_details}.`);
+    }
+    parts.push(`Repayment tenure: ${scheme.repayment_tenure}.`);
+    if (scheme.benefits?.length) {
+      parts.push(`Key benefits: ${scheme.benefits.join(', ')}.`);
+    }
+    if (scheme.special_features?.length) {
+      parts.push(`Special features: ${scheme.special_features.join(', ')}.`);
+    }
+    parts.push(`Documents required: ${scheme.documents_required?.join(', ')}.`);
+    if (scheme.application_process?.official_portal) {
+      parts.push(`Apply online at: ${scheme.application_process.official_portal}.`);
+    }
+    return parts.join(' ');
+  }
+
+  buildFullTTS(schemes) {
+    const intro = `Here are the recommended loan and subsidy schemes for your farm. `;
+    const body = schemes.map((s, i) =>
+      `Scheme ${i + 1}: ${s.tts_description}`
+    ).join(' ... ');
+    const outro = ' Please visit the official portals or your nearest bank branch to apply. Good luck with your farming.';
+    return intro + body + outro;
   }
 }
 

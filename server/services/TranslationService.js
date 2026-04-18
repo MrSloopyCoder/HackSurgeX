@@ -169,14 +169,17 @@ class TranslationService {
             interest_rate: await this.translateText(scheme.interest_rate, targetLang),
             repayment: await this.translateText(scheme.repayment, targetLang),
             subsidy: scheme.subsidy ? await this.translateText(scheme.subsidy, targetLang) : scheme.subsidy,
-            benefits: await Promise.all(scheme.benefits.map(b => this.translateText(b, targetLang)))
+            benefits: await Promise.all(scheme.benefits.map(b => this.translateText(b, targetLang))),
+            special_features: await Promise.all((scheme.special_features || []).map(f => this.translateText(f, targetLang))),
+            tts_description: await this.translateText(scheme.tts_description, targetLang)
           }))
         );
         translated.loan_recommendations = {
           ...analysis.loan_recommendations,
           recommended_schemes: translatedSchemes,
           summary: await this.translateText(analysis.loan_recommendations.summary, targetLang),
-          disclaimer: await this.translateText(analysis.loan_recommendations.disclaimer, targetLang)
+          disclaimer: await this.translateText(analysis.loan_recommendations.disclaimer, targetLang),
+          tts_full: await this.translateText(analysis.loan_recommendations.tts_full, targetLang)
         };
       }
 

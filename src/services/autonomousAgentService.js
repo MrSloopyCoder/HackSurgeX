@@ -116,58 +116,40 @@ class AutonomousAgentService {
         // Continue without audio - don't fail the whole workflow
       }
 
-      // Step 5: Return results to UI first
+      // Step 5: Return results to UI — dismiss overlay immediately so report shows
       this.updateStatus(5, 'Displaying results...');
       console.log('[Agent] Step 5: Returning results to UI');
-      
+
       if (this.resultCallback) {
-        console.log('[Agent] Calling result callback');
         this.resultCallback({
           analysis: analysisResult,
           audioBlobs: audioBlobs,
           isAgenticWorkflow: true
         });
-      } else {
-        console.error('[Agent] No result callback set!');
       }
 
-      // Wait for the result screen to fully render before playing audio
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Dismiss the overlay NOW so the report is visible
+      this.isProcessing = false;
+      window.dispatchEvent(new CustomEvent('agentEnd'));
 
-      // Play audio chunks sequentially after report is displayed
-      if (audioBlobs.length > 0) {
-        console.log('[Agent] Playing', audioBlobs.length, 'audio chunks');
-        this.updateStatus(5, 'Speaking results...');
-        
-        for (let i = 0; i < audioBlobs.length; i++) {
-          console.log(`[Agent] Playing chunk ${i + 1}/${audioBlobs.length}`);
-          try {
-            await sarvamVoiceService.playAudio(audioBlobs[i]);
-            // Small pause between chunks
-            await new Promise(resolve => setTimeout(resolve, 500));
-          } catch (audioError) {
-            console.warn(`[Agent] Audio chunk ${i + 1} playback failed:`, audioError.message);
-          }
-        }
-      } else {
-        console.log('[Agent] No audio to play (TTS failed)');
-      }
+      // Audio is handled entirely by ResultScreen after it renders
+      // Do NOT play audio here to avoid overlap
 
       this.updateStatus(6, 'Complete!');
       console.log('[Agent] Workflow complete!');
-      
+
     } catch (error) {
       console.error('[Agent] Workflow error:', error);
-      console.error('[Agent] Error stack:', error.stack);
       this.updateStatus(-1, `Error: ${error.message}`);
-      
-      // Show error to user without TTS
       alert(`Analysis Error: ${error.message}\n\nPlease try again.`);
-      
     } finally {
       this.isProcessing = false;
-      window.dispatchEvent(new CustomEvent('agentEnd'));
-      console.log('[Agent] Workflow ended, isProcessing set to false');
+      // agentEnd already dispatched above on success; dispatch again only if not yet done
+      if (!window._agentEndDispatched) {
+        window.dispatchEvent(new CustomEvent('agentEnd'));
+      }
+      window._agentEndDispatched = false;
+      console.log('[Agent] Workflow ended');
     }
   }
 

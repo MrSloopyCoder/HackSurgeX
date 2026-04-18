@@ -7,23 +7,28 @@ import {
 } from 'lucide-react';
 import './ResultScreen.css';
 import AdvisoryReport from './AdvisoryReport';
+import LoanScreen from './LoanScreen';
 import { t } from '../translations';
 import sarvamVoiceService from '../services/sarvamVoiceService';
 
 function ResultScreen({ result, onBack, language }) {
   const [speaking, setSpeaking] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [showLoans, setShowLoans] = useState(false);
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [currentChunk, setCurrentChunk] = useState(0);
   const audioRef = useRef(null);
 
   useEffect(() => {
     if (result.isAgenticWorkflow && result.audioBlobs && result.audioBlobs.length > 0) {
-      playAgenticAudio();
+      // Wait for report to fully render before starting audio
+      const timer = setTimeout(() => playAgenticAudio(), 2000);
+      return () => {
+        clearTimeout(timer);
+        stopAllAudio();
+      };
     }
-    return () => {
-      stopAllAudio();
-    };
+    return () => stopAllAudio();
   }, [result]);
 
   const stopAllAudio = () => {
@@ -75,6 +80,10 @@ function ResultScreen({ result, onBack, language }) {
       audioRef.current = null;
     }
   };
+
+  if (showLoans) {
+    return <LoanScreen loanData={(result.analysis || result).loan_recommendations} onBack={() => setShowLoans(false)} language={language} />;
+  }
 
   if (showReport && result.advisory_report) {
     const analysis = result.analysis || result;
@@ -494,27 +503,17 @@ function ResultScreen({ result, onBack, language }) {
       )}
 
       <div className="action-stack mb-8">
-        {/* Loan Schemes Preview */}
-        {analysis.loan_recommendations?.recommended_schemes?.length > 0 && (
-          <div className="data-card glass-panel col-span-2 mb-2">
-            <div className="data-header">
-              <span style={{fontSize:'1.2rem'}}>🏦</span>
-              <h3>{t('loan_schemes', language)}</h3>
-            </div>
-            <div className="tags-container mt-3">
-              {analysis.loan_recommendations.recommended_schemes.map((s, i) => (
-                <span key={i} className="glass-tag">{s.name}</span>
-              ))}
-            </div>
-            <p className="data-p mt-2" style={{fontSize:'0.78rem', opacity:0.7}}>
-              {analysis.loan_recommendations.summary}
-            </p>
-          </div>
-        )}
         {analysis.advisory_report && (
           <button className="btn btn-primary" onClick={() => setShowReport(true)}>
             <FileText size={20} />
             <span>{t('view_detailed_report', language)}</span>
+          </button>
+        )}
+
+        {analysis.loan_recommendations?.recommended_schemes?.length > 0 && (
+          <button className="btn btn-loan" onClick={() => setShowLoans(true)}>
+            <span style={{fontSize:'1.1rem'}}>🏦</span>
+            <span>{t('view_loan_schemes', language)}</span>
           </button>
         )}
 
