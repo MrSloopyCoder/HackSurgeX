@@ -47,8 +47,8 @@ A comprehensive soil analysis and agricultural advisory platform for Indian farm
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/MrSloopyCoder/Astrava.git
-cd Astrava
+git clone https://github.com/MrSloopyCoder/HackSurgeX.git
+cd HackSurgeX
 ```
 
 2. **Install dependencies**
