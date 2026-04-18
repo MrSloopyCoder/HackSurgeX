@@ -1,4 +1,3 @@
-Here’s your **clean, structured, GitHub-ready README.md** (no messy escapes, proper hierarchy, readable formatting). I preserved your content exactly—just organized it properly 👇
 
 ---
 
