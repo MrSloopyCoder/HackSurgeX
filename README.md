@@ -310,11 +310,7 @@ Contributions are welcome! Please follow these steps:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👥 Authors
-
-- **Astrava Team** - Agricultural AI Platform
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
 ## 🙏 Acknowledgments
 
@@ -325,9 +321,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Sarvam AI** - For multi-language voice support
 - **OpenCage, WeatherAPI, Planet.com** - For API services
 
-## 📞 Support
-
-For support, email astrava@agricultural-ai.com or open an issue in the repository.
 
 ## 🌟 Star History
 
