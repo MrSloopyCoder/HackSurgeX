@@ -332,4 +332,4 @@ If you found this useful, drop a star ⭐
 
 ---
 
-If you want next level polish (like badges, screenshots, demo GIF, pitch-ready README for judges 👀), tell me—I’ll upgrade this to a **hackathon-winning README**.
+
